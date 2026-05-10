@@ -1,3 +1,5 @@
+import { MoodEntry } from '../types';
+
 export const MOOD_OPTIONS = [
   { value: 1, emoji: '😢', label: 'Very Sad' },
   { value: 2, emoji: '🙁', label: 'Sad' },

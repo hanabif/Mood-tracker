@@ -13,6 +13,7 @@ import { MoodDistribution } from '../components/MoodDistribution';
 import { MoodDetailModal } from '../components/MoodDetailModal';
 import { BadgesList } from '../components/BadgesList';
 import { ReflectionSearch } from '../components/ReflectionSearch';
+import { MoodEntry } from '../types';
 import { getTodayEntry } from '../utils/getTodayEntry';
 import { getMoodEmoji, getMoodLabel, getMoodPastelClasses, getFeelingLabel, calculateStreak } from '../utils/moodUtils';
 

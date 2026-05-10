@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { api } from '../services/api';
 import { MoodEntry } from '../types';
 import { getMoodEmoji } from '../utils/moodUtils';
-import debounce from 'lodash/debounce';
+import { debounce } from 'lodash';
 
 interface ReflectionSearchProps {
     onEntryClick: (entry: MoodEntry) => void;
