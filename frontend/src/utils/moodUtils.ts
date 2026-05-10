@@ -105,5 +105,8 @@ export const getMostCommonFeeling = (entries: MoodEntry[]): { id: string; emoji:
   const topFeelingId = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
   if (!topFeelingId) return null;
 
-  return getFeelingLabel(topFeelingId);
+  return {
+    id: topFeelingId,
+    ...getFeelingLabel(topFeelingId),
+  };
 };

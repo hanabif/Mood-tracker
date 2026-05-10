@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { api } from '../services/api';
+import { getAccessToken } from '../services/token';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -152,17 +153,25 @@ export const Settings = () => {
 
 const handleExport = async (format: 'csv' | 'json') => {
   try {
-    const response = await api.get(`/mood-entries/export_data/?format=${format}`, {
-      responseType: 'blob',
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://moodtrace.onrender.com/api';
+    const token = getAccessToken();
+    const response = await fetch(`${apiUrl}/mood-entries/export_data/?format=${format}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    if (!response.ok) {
+      throw new Error('Export request failed');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', `mood_history.${format}`);
     document.body.appendChild(link);
     link.click();
     link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Export failed:', error);
     alert('Failed to export data. Please try again.');

@@ -1,5 +1,3 @@
-import { getMoodEmoji } from '../utils/moodUtils';
-
 interface SelfCareSuggestionsProps {
     mood: number;
 }
