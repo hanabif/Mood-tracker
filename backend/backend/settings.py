@@ -146,7 +146,7 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME_LAMBDA': lambda lifetime: lifetime + timedelta(days=1),
 }
 
-default_cors_origins = "http://localhost:5173,http://127.0.0.1:5173"
+default_cors_origins = "https://mood-tracker-lemon-six.vercel.app/"
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv('CORS_ALLOWED_ORIGINS', default_cors_origins).split(',')
