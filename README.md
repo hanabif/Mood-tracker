@@ -202,6 +202,31 @@ This is a full-stack Mood Tracking application built with React (TypeScript, Vit
 
 In a production environment, you would typically use environment variables for sensitive settings like `SECRET_KEY`, database credentials, etc. For development, `settings.py` directly defines these.
 
+Recommended backend environment variables:
+
+- `DJANGO_SECRET_KEY`: Secret key for Django.
+- `DEBUG`: Use `False` in production.
+- `ALLOWED_HOSTS`: Comma-separated hosts, for example `your-api.onrender.com`.
+- `CORS_ALLOWED_ORIGINS`: Comma-separated frontend origins, for example `https://your-frontend.onrender.com`.
+- `CSRF_TRUSTED_ORIGINS`: Comma-separated trusted origins for unsafe requests from your frontend.
+- `DATABASE_URL`: Render PostgreSQL connection string.
+
+## Render Backend Deploy
+
+If you deploy only the Django backend from the `backend/` folder on Render:
+
+- Root Directory: `backend`
+- Build Command: `pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput`
+- Start Command: `gunicorn backend.wsgi:application`
+
+Important:
+
+- Do not use `gunicorn config.wsgi:application` in this repo. The Django project package is `backend`, not `config`.
+- Set `DEBUG=False` on Render.
+- Set `ALLOWED_HOSTS` to your Render backend hostname.
+- If your frontend is hosted separately, set both `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS` to that frontend URL.
+- If you attach a Render Postgres database, Render will provide `DATABASE_URL` automatically if you connect it to the service.
+
 ## Example API Requests
 
 ### Authentication
