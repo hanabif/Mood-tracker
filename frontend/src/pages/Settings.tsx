@@ -75,7 +75,7 @@ export const Settings = () => {
     try {
       const apiUrl = (import.meta.env.VITE_API_URL || 'https://moodtrace.onrender.com/api').replace(/\/+$/, '');
       const token = getAccessToken();
-      const response = await fetch(`${apiUrl}/mood-entries/export_data/?format=${format}`, {
+      const response = await fetch(`${apiUrl}/mood-entries/export_data/?export_format=${format}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 

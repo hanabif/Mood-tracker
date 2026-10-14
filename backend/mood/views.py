@@ -51,10 +51,10 @@ class MoodEntryViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def export_data(self, request):
-        format = request.query_params.get('format', 'json')
+        export_format = request.query_params.get('export_format', 'json')
         entries = self.get_queryset()
 
-        if format == 'csv':
+        if export_format == 'csv':
             response = HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment; filename="mood_data.csv"'
             writer = csv.writer(response)
