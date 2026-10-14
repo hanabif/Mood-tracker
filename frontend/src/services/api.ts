@@ -15,8 +15,26 @@ const getHeaders = () => {
 
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Something went wrong');
+    let message = `Request failed (${response.status})`;
+    try {
+      const error = await response.json();
+      if (typeof error === 'string') {
+        message = error;
+      } else if (error && typeof error === 'object') {
+        const messages = Object.entries(error).flatMap(([field, value]) => {
+          const details = Array.isArray(value) ? value : [value];
+          return details
+            .filter((detail): detail is string => typeof detail === 'string')
+            .map((detail) => field === 'detail' || field === 'non_field_errors'
+              ? detail
+              : `${field}: ${detail}`);
+        });
+        if (messages.length) message = messages.join(' ');
+      }
+    } catch {
+      // Keep the status-based message when the server doesn't return JSON.
+    }
+    throw new Error(message);
   }
   return response.json();
 };

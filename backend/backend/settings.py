@@ -146,11 +146,22 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME_LAMBDA': lambda lifetime: lifetime + timedelta(days=1),
 }
 
-default_cors_origins = "https://mood-tracker-lemon-six.vercel.app/"
-CORS_ALLOWED_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv('CORS_ALLOWED_ORIGINS', default_cors_origins).split(',')
-    if origin.strip()
+default_cors_origins = [
+    "https://mood-tracker-lemon-six.vercel.app",
+    "https://mood-tracker-a7ky4nymz-haymanots-projects-aa70d3c6.vercel.app",
+]
+CORS_ALLOWED_ORIGINS = list(dict.fromkeys(
+    default_cors_origins + [
+        origin.strip().rstrip('/')
+        for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+        if origin.strip()
+    ]
+))
+
+# Allow Vercel preview deployments for this project/team without opening CORS
+# to every *.vercel.app site.
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://mood-tracker-[a-z0-9-]+-haymanots-projects-aa70d3c6\.vercel\.app$",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
