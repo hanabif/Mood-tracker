@@ -24,6 +24,8 @@ export const Settings = () => {
     user?.avatar || null
   );
   const [isUpdating, setIsUpdating] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<'csv' | 'json' | null>(null);
+  const [exportError, setExportError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
   const {
@@ -65,6 +67,45 @@ export const Settings = () => {
       console.error(error);
     } finally {
       setIsUpdating(false);
+    }
+  };
+  const handleExport = async (format: 'csv' | 'json') => {
+    setExportingFormat(format);
+    setExportError('');
+    try {
+      const apiUrl = (import.meta.env.VITE_API_URL || 'https://moodtrace.onrender.com/api').replace(/\/+$/, '');
+      const token = getAccessToken();
+      const response = await fetch(`${apiUrl}/mood-entries/export_data/?format=${format}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) {
+        const responseBody = await response.text();
+        let detail = responseBody;
+        try {
+          const error = JSON.parse(responseBody);
+          detail = error.detail || error.message || responseBody;
+        } catch {
+          // Keep the server's text response when it isn't JSON.
+        }
+        throw new Error(detail || `Export failed (${response.status}).`);
+      }
+
+      const blob = await response.blob();
+      if (blob.size === 0) throw new Error('The server returned an empty export file.');
+
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `mood_history.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1000);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : 'Export failed. Please try again.');
+    } finally {
+      setExportingFormat(null);
     }
   };
 
@@ -132,48 +173,26 @@ export const Settings = () => {
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
+              type="button"
+              disabled={exportingFormat !== null}
               onClick={() => handleExport('csv')}
               className="border-pastel-mint-dark/50 text-green-700 dark:text-emerald-400 hover:bg-pastel-mint dark:hover:bg-emerald-900/20"
             >
-              📥 Export CSV
+              {exportingFormat === 'csv' ? 'Preparing CSV…' : '📥 Export CSV'}
             </Button>
             <Button
               variant="outline"
+              type="button"
+              disabled={exportingFormat !== null}
               onClick={() => handleExport('json')}
               className="border-pastel-blue-dark/50 text-blue-700 dark:text-blue-400 hover:bg-pastel-blue dark:hover:bg-blue-900/20"
             >
-              📥 Export JSON
+              {exportingFormat === 'json' ? 'Preparing JSON…' : '📥 Export JSON'}
             </Button>
           </div>
+          {exportError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-300">{exportError}</p>}
         </section>
       </div>
     </div>
   );
-};
-
-const handleExport = async (format: 'csv' | 'json') => {
-  try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://moodtrace.onrender.com/api';
-    const token = getAccessToken();
-    const response = await fetch(`${apiUrl}/mood-entries/export_data/?format=${format}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-
-    if (!response.ok) {
-      throw new Error('Export request failed');
-    }
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `mood_history.${format}`);
-    document.body.appendChild(link);
-    link.click();
-    link.parentNode?.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Export failed:', error);
-    alert('Failed to export data. Please try again.');
-  }
 };
