@@ -61,10 +61,12 @@ export const MoodTrends = ({ entries }: MoodTrendsProps) => {
   };
 
   return (
-    <div className="pastel-card p-5">
-      <h2 className="text-xl font-semibold text-purple-700 mb-4">📊 Mood &amp; Sleep Trends</h2>
+    <div className="pastel-card p-4 sm:p-5">
+      <h2 className="mb-3 text-lg font-semibold text-purple-700 dark:text-purple-400">📊 Mood &amp; Sleep Trends</h2>
 
-      <ResponsiveContainer width="100%" height={280}>
+      {data.length === 0 ? (
+        <div className="rounded-xl bg-purple-50/70 p-8 text-center text-sm text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">Mood and sleep trends will appear after your first check-in.</div>
+      ) : <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} onClick={handleBarClick} style={{ cursor: 'pointer' }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} />
@@ -81,7 +83,7 @@ export const MoodTrends = ({ entries }: MoodTrendsProps) => {
           </Bar>
           <Bar dataKey="sleep" name="sleep" fill="#c8f5e4" radius={[6, 6, 0, 0]} maxBarSize={32} />
         </BarChart>
-      </ResponsiveContainer>
+      </ResponsiveContainer>}
 
       {/* Entry detail panel */}
       {selectedEntry && (

@@ -8,7 +8,7 @@ interface WeeklySummaryProps {
 
 export const WeeklySummary = ({ entries }: WeeklySummaryProps) => {
     const summary = useMemo(() => {
-        const last7 = entries
+        const last7 = [...entries]
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
             .slice(0, 7);
 
@@ -26,11 +26,12 @@ export const WeeklySummary = ({ entries }: WeeklySummaryProps) => {
         };
     }, [entries]);
 
-    if (!summary) return null;
-
     return (
-        <div className="pastel-card p-5 animate-fade-in">
-            <h2 className="text-xl font-semibold text-purple-700 dark:text-purple-400 mb-4">📊 Weekly Summary</h2>
+        <div className="pastel-card p-4 animate-fade-in sm:p-5">
+            <h2 className="mb-3 text-lg font-semibold text-purple-700 dark:text-purple-400">📊 Weekly Summary</h2>
+            {!summary ? (
+                <div className="rounded-xl bg-purple-50/70 p-5 text-center text-sm text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">Log a few moods to see your weekly summary.</div>
+            ) : (
             <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 rounded-xl bg-pastel-mint/50 dark:bg-emerald-900/20 border border-pastel-mint-dark/30">
                     <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider mb-1">Avg Mood</p>
@@ -58,6 +59,7 @@ export const WeeklySummary = ({ entries }: WeeklySummaryProps) => {
                     )}
                 </div>
             </div>
+            )}
         </div>
     );
 };

@@ -69,13 +69,14 @@ export const Settings = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-sm">
-      <div className="pastel-card p-6 animate-fade-in shadow-lg">
-        <h1 className="text-2xl font-bold text-purple-700 mb-6 flex items-center gap-2">
+    <div className="mx-auto w-full max-w-5xl">
+      <div className="pastel-card grid animate-fade-in gap-7 p-5 shadow-sm md:grid-cols-[1fr_0.85fr] md:p-7">
+        <section>
+        <h1 className="mb-5 flex items-center gap-2 text-2xl font-bold text-purple-700 dark:text-purple-300">
           <span>⚙️</span> Settings
         </h1>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="flex flex-col items-center gap-4 mb-2">
             <div className="relative group">
               <div className="w-24 h-24 rounded-full border-4 border-pastel-lavender overflow-hidden bg-gray-100 flex items-center justify-center shadow-inner">
@@ -119,10 +120,9 @@ export const Settings = () => {
             {isUpdating ? 'Saving...' : 'Save Changes ✨'}
           </Button>
         </form>
+        </section>
 
-        <hr className="my-8 border-gray-100 dark:border-gray-700/50" />
-
-        <div className="space-y-4">
+        <section className="space-y-4 border-t border-gray-100 pt-6 dark:border-gray-700/50 md:border-l md:border-t-0 md:pl-7 md:pt-1">
           <h2 className="text-xl font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
             <span>📊</span> Data Export
           </h2>
@@ -145,7 +145,7 @@ export const Settings = () => {
               📥 Export JSON
             </Button>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

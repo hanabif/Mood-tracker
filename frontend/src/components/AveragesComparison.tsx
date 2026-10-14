@@ -42,8 +42,8 @@ export const AveragesComparison = ({ entries }: AveragesComparisonProps) => {
   }, [last5Avg.sleep, prev5Avg.sleep]);
 
   return (
-    <div className="pastel-card p-5">
-      <h2 className="text-xl font-semibold text-purple-700 mb-4">📈 Averages Comparison</h2>
+    <div className="pastel-card p-4 sm:p-5">
+      <h2 className="mb-3 text-lg font-semibold text-purple-700 dark:text-purple-400">📈 Averages Comparison</h2>
       {entries.length < 10 ? (
         <div className="text-center py-6 text-gray-400">
           <p className="text-3xl mb-2">📊</p>

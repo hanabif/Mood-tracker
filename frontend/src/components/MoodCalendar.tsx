@@ -41,8 +41,8 @@ export const MoodCalendar = ({ entries }: MoodCalendarProps) => {
     while (calendarCells.length % 7 !== 0) calendarCells.push(null);
 
     return (
-        <div className="pastel-card p-5 transition-colors">
-            <h2 className="text-xl font-semibold text-purple-700 dark:text-purple-400 mb-4">📅 Mood Calendar</h2>
+        <div className="pastel-card p-4 transition-colors sm:p-5">
+            <h2 className="mb-3 text-lg font-semibold text-purple-700 dark:text-purple-400">📅 Mood Calendar</h2>
 
             {/* Navigation */}
             <div className="flex justify-between items-center mb-3">

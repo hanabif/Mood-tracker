@@ -30,13 +30,13 @@ export const MoodDistribution = ({ entries }: MoodDistributionProps) => {
         })).reverse(); // Show Great at top
     }, [entries]);
 
-    if (entries.length === 0) return null;
-
     return (
-        <div className="pastel-card p-5 animate-fade-in">
-            <h2 className="text-xl font-semibold text-purple-700 dark:text-purple-400 mb-4">🌈 Mood Distribution</h2>
+        <div className="pastel-card p-4 animate-fade-in sm:p-5">
+            <h2 className="mb-3 text-lg font-semibold text-purple-700 dark:text-purple-400">🌈 Mood Distribution</h2>
 
-            <div className="h-[250px] w-full">
+            {entries.length === 0 ? (
+                <div className="rounded-xl bg-purple-50/70 p-5 text-center text-sm text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">Mood distribution will appear after your first check-in.</div>
+            ) : <div className="h-[220px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={data}
@@ -62,11 +62,11 @@ export const MoodDistribution = ({ entries }: MoodDistributionProps) => {
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
-            </div>
+            </div>}
 
-            <p className="text-xs text-center text-gray-400 dark:text-gray-500 mt-2 italic">
+            {entries.length > 0 && <p className="mt-2 text-center text-xs italic text-gray-400 dark:text-gray-500">
                 Frequency of each mood in your history
-            </p>
+            </p>}
         </div>
     );
 };

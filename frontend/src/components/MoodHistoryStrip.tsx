@@ -15,7 +15,7 @@ export const MoodHistoryStrip = ({ entries, onEntryClick }: MoodHistoryStripProp
     if (last7Days.length === 0) return null;
 
     return (
-        <div className="pastel-card p-4 mb-6 animate-fade-in">
+        <div className="pastel-card p-4 animate-fade-in">
             <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 px-1">
                 Last 7 Records
             </h3>

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { removeTokens } from '../services/token';
@@ -8,6 +8,9 @@ export const Navbar = () => {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  if (pathname !== '/login' && pathname !== '/register') return null;
 
   const handleLogout = () => {
     removeTokens();
@@ -30,32 +33,7 @@ export const Navbar = () => {
             >
               {theme === 'light' ? '🌙' : '☀️'}
             </button>
-            {user ? (
-              <>
-                <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                  Hi, <span className="font-semibold text-purple-600 dark:text-purple-400">{user.name || user.username}</span> 👋
-                </span>
-                <Link
-                  to="/history"
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-pastel-lavender dark:hover:bg-gray-700"
-                >
-                  📖 History
-                </Link>
-                <Link
-                  to="/settings"
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-pastel-lavender dark:hover:bg-gray-700"
-                >
-                  ⚙️ Settings
-                </Link>
-                <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  className="btn-hover text-sm border-purple-200 dark:border-gray-600 text-purple-600 dark:text-purple-400 hover:bg-pastel-lavender dark:hover:bg-gray-700"
-                >
-                  Logout
-                </Button>
-              </>
-            ) : (
+            {!user ? (
               <>
                 <Link to="/login" className="text-sm text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-pastel-lavender dark:hover:bg-gray-700">
                   Login
@@ -64,6 +42,8 @@ export const Navbar = () => {
                   <Button className="text-sm btn-hover">Register</Button>
                 </Link>
               </>
+            ) : (
+              <Button onClick={handleLogout} variant="outline" className="btn-hover text-sm border-purple-200 text-purple-600 hover:bg-pastel-lavender">Logout</Button>
             )}
           </div>
         </div>

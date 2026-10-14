@@ -8,6 +8,7 @@ import { Label } from '../components/ui/Label';
 import { api } from '../services/api';
 import { setAccessToken, setRefreshToken } from '../services/token';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -18,6 +19,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export const Login = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -32,6 +34,7 @@ export const Login = () => {
       const response = await api.post('/auth/login/', data);
       setAccessToken(response.access);
       setRefreshToken(response.refresh);
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
       navigate('/dashboard');
     } catch (error) {
       setError('root', { message: 'Invalid username or password' });

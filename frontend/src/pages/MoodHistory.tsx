@@ -15,7 +15,7 @@ export const MoodHistory = () => {
 
     if (isLoading) {
         return (
-            <div className="container mx-auto px-4 py-8 max-w-2xl text-center">
+            <div className="mx-auto w-full max-w-5xl py-2 text-center">
                 <div className="animate-pulse space-y-4">
                     <div className="h-8 bg-gray-200 dark:bg-gray-700 w-48 mx-auto rounded" />
                     {[1, 2, 3].map(i => (
@@ -35,12 +35,12 @@ export const MoodHistory = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-2xl">
-            <h1 className="text-3xl font-bold text-purple-700 dark:text-purple-400 mb-8 border-b dark:border-gray-700 pb-4 flex items-center gap-3">
+        <div className="mx-auto w-full max-w-5xl">
+            <h1 className="mb-5 flex items-center gap-3 border-b pb-4 text-2xl font-bold text-purple-700 dark:border-gray-700 dark:text-purple-400">
                 <span>📖</span> Mood History
             </h1>
 
-            <div className="relative border-l-2 border-purple-100 dark:border-gray-800 ml-4 space-y-8 pb-8">
+            <div className="relative ml-4 space-y-4 border-l-2 border-purple-100 pb-6 dark:border-gray-800">
                 {sortedEntries.map((entry) => {
                     const isExpanded = expandedId === entry.id;
                     const date = new Date(entry.date + 'T12:00:00');

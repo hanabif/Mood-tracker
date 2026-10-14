@@ -66,12 +66,13 @@ export const BadgesList = ({ entries }: BadgesListProps) => {
         return list;
     }, [entries]);
 
-    if (badges.length === 0) return null;
-
     return (
-        <div className="pastel-card p-5 animate-fade-in">
-            <h2 className="text-xl font-semibold text-purple-700 dark:text-purple-400 mb-4">🏆 Achievements</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="pastel-card p-4 animate-fade-in sm:p-5">
+            <h2 className="mb-3 text-lg font-semibold text-purple-700 dark:text-purple-400">🏆 Achievements</h2>
+            {badges.length === 0 ? (
+                <div className="rounded-xl bg-purple-50/70 p-5 text-center text-sm text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">Your first achievement will appear after you log a mood.</div>
+            ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {badges.map((badge) => (
                     <div
                         key={badge.id}
@@ -88,6 +89,7 @@ export const BadgesList = ({ entries }: BadgesListProps) => {
                     </div>
                 ))}
             </div>
+            )}
         </div>
     );
 };

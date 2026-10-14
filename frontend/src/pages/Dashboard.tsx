@@ -1,251 +1,188 @@
 import { useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useMoodEntries } from '../hooks/useMoodEntries';
-import { useQuotes } from '../hooks/useQuotes';
 import { MoodLogForm } from '../components/MoodLogForm';
 import { MoodTrends } from '../components/MoodTrends';
 import { AveragesComparison } from '../components/AveragesComparison';
 import { MoodCalendar } from '../components/MoodCalendar';
 import { WeeklySummary } from '../components/WeeklySummary';
-import { SelfCareSuggestions } from '../components/SelfCareSuggestions';
 import { MoodHistoryStrip } from '../components/MoodHistoryStrip';
 import { MoodDistribution } from '../components/MoodDistribution';
 import { MoodDetailModal } from '../components/MoodDetailModal';
 import { BadgesList } from '../components/BadgesList';
-import { ReflectionSearch } from '../components/ReflectionSearch';
+import { DashboardContentSkeleton } from '../components/DashboardSkeleton';
 import { MoodEntry } from '../types';
 import { getTodayEntry } from '../utils/getTodayEntry';
-import { getMoodEmoji, getMoodLabel, getMoodPastelClasses, getFeelingLabel, calculateStreak } from '../utils/moodUtils';
+import { getFeelingLabel, getMoodEmoji, getMoodLabel, getMoodPastelClasses, calculateStreak } from '../utils/moodUtils';
+
+const pageInfo = {
+  home: { title: 'Your mood dashboard', description: 'A small check-in can help you notice what you need today.' },
+  calendar: { title: 'Mood calendar', description: 'Explore your check-ins month by month.' },
+  insights: { title: 'Weekly insights', description: 'A closer look at your recent routines and progress.' },
+  trends: { title: 'Mood & sleep trends', description: 'See how your mood and sleep change over time.' },
+} as const;
+
+type DashboardSection = keyof typeof pageInfo;
 
 export const Dashboard = () => {
   const { user } = useAuth();
-  const { data: entries, isLoading, isError } = useMoodEntries(user?.id);
-  const { data: quotes } = useQuotes();
+  const { pathname } = useLocation();
+  const { data: entries, isLoading, isError, refetch } = useMoodEntries(user?.id);
   const [showLogForm, setShowLogForm] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
 
-  const todayEntry = useMemo(() => getTodayEntry(entries), [entries]);
-
-  const streak = useMemo(() => {
-    if (!entries) return 0;
-    return calculateStreak(entries);
-  }, [entries]);
-
-  const latestEntry = useMemo(() => {
-    if (!entries || entries.length === 0) return null;
-    return [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-  }, [entries]);
-
-  const accentClasses = useMemo(() => {
-    if (!latestEntry) return { bg: 'bg-pastel-lavender', border: 'border-pastel-lavender-dark', dot: '#e8d5f5' };
-    return getMoodPastelClasses(latestEntry.mood);
-  }, [latestEntry]);
-
-  const quoteForToday = useMemo(() => {
-    if (!todayEntry || !quotes) return null;
-    const filtered = quotes.filter((q) => q.mood === todayEntry.mood);
-    if (filtered.length === 0) return null;
-    return filtered[Math.floor(Math.random() * filtered.length)];
-  }, [todayEntry, quotes]);
+  const section: DashboardSection = pathname === '/dashboard/calendar'
+    ? 'calendar'
+    : pathname === '/dashboard/insights'
+      ? 'insights'
+      : pathname === '/dashboard/trends'
+        ? 'trends'
+        : 'home';
+  const page = pageInfo[section];
+  const entryList = entries ?? [];
+  const todayEntry = useMemo(() => getTodayEntry(entryList), [entryList]);
+  const streak = useMemo(() => calculateStreak(entryList), [entryList]);
+  const accentClasses = todayEntry
+    ? getMoodPastelClasses(todayEntry.mood)
+    : { bg: 'bg-pastel-lavender', border: 'border-pastel-lavender-dark' };
 
   const handleLogMoodClick = () => {
-    if (todayEntry) {
-      setShowConfirm(true);
-    } else {
-      setShowLogForm(true);
-    }
+    if (todayEntry) setShowConfirm(true);
+    else setShowLogForm((current) => !current);
   };
 
-  const handleConfirmReLog = () => {
-    setShowConfirm(false);
-    setShowLogForm(true);
-  };
+  if (isLoading) return <DashboardContentSkeleton variant={section} />;
+
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-3xl py-12 text-center">
+        <div className="pastel-card p-8">
+          <span className="text-4xl">🌧️</span>
+          <h1 className="mt-3 text-xl font-bold text-gray-700 dark:text-gray-200">We couldn&apos;t load your mood data</h1>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">The request may still be waking up. Try again in a moment.</p>
+          <button onClick={() => void refetch()} className="mt-5 rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700">Try again</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-5xl">
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="mx-auto w-full max-w-7xl animate-fade-in">
+      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-400">
-            🌸 Dashboard
-          </h1>
-          <div className="flex items-center gap-4 mt-1">
-            {user && (
-              <p className="text-sm text-gray-400 dark:text-gray-500">
-                Hi, <span className="text-purple-500 font-medium">{user.name || user.username}</span>
-              </p>
-            )}
-            {streak > 0 && (
-              <span className="text-sm bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 animate-bounce-in">
-                🔥 {streak} Day Streak
-              </span>
-            )}
-          </div>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-purple-500 dark:text-purple-300">MoodTracker</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 sm:text-3xl">{page.title}</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{page.description}</p>
         </div>
-        <button
-          onClick={handleLogMoodClick}
-          className={`
-            flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm
-            ${accentClasses.bg} border ${accentClasses.border} dark:bg-purple-900/20 dark:border-purple-800
-            hover:shadow-md hover:scale-105 transition-all duration-150
-            text-gray-700 dark:text-gray-200
-          `}
-        >
-          ✨ Log Mood
-        </button>
-      </div>
+        {section === 'home' && (
+          <div className="flex items-center gap-3">
+            {streak > 0 && <span className="rounded-full bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">🔥 {streak} day streak</span>}
+            <button
+              onClick={handleLogMoodClick}
+              className={`rounded-xl border px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-purple-800 dark:bg-purple-900/20 dark:text-gray-100 ${accentClasses.bg} ${accentClasses.border}`}
+            >
+              ✨ {todayEntry ? 'Update today’s mood' : showLogForm ? 'Close mood form' : 'Log today’s mood'}
+            </button>
+          </div>
+        )}
+      </header>
 
-      {streak >= 3 && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-orange-400 to-orange-500 rounded-2xl text-white shadow-lg animate-fade-in flex items-center justify-between">
+      {section === 'home' && (
+        <div className="space-y-4">
           <div>
-            <p className="font-bold text-lg">Amazing streak! 🔥</p>
-            <p className="text-sm opacity-90">You&apos;ve logged your mood {streak} days in a row. Keep taking care of yourself!</p>
+            {entryList.length > 0 ? (
+              <MoodHistoryStrip entries={entryList} onEntryClick={setSelectedEntry} />
+            ) : (
+              <div className="pastel-card flex min-h-24 items-center justify-between gap-4 p-4">
+                <div><h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Your last 7 records</h2><p className="mt-1 text-sm text-gray-500">Your recent check-ins will appear here.</p></div>
+                <span className="text-2xl">📝</span>
+              </div>
+            )}
           </div>
-          <span className="text-4xl">🚀</span>
-        </div>
-      )}
 
-      {/* Confirmation dialog */}
-      {showConfirm && (
-        <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4"
-          onClick={() => setShowConfirm(false)}
-        >
-          <div
-            className="pastel-card p-6 max-w-sm w-full animate-fade-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center mb-4">
-              <span className="text-4xl">🔄</span>
-              <h3 className="text-lg font-semibold text-gray-700 mt-2">Log another entry?</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                You already logged a mood for today. Submitting again will update today&apos;s entry.
-              </p>
+          {showLogForm && (
+            <div className="animate-fade-in">
+              <MoodLogForm onSuccess={() => setShowLogForm(false)} />
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowConfirm(false)}
-                className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmReLog}
-                className="flex-1 px-4 py-2 rounded-xl bg-pastel-lavender dark:bg-purple-900 border border-pastel-lavender-dark dark:border-purple-800 text-sm font-semibold text-purple-700 dark:text-purple-300 hover:bg-pastel-lavender-dark dark:hover:bg-purple-800/80 transition-colors"
-              >
-                Update Entry
-              </button>
+          )}
+
+          <section className="pastel-card overflow-hidden p-4 sm:p-5">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Today&apos;s entry</h2>
+                <p className="text-xs text-gray-400 dark:text-gray-500">A moment to check in with yourself</p>
+              </div>
+              {todayEntry && <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Logged today</span>}
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Inline Log Form (slides in above today's entry) */}
-      {showLogForm && (
-        <div className="mb-6 animate-fade-in">
-          <MoodLogForm onSuccess={() => setShowLogForm(false)} />
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="space-y-6">
-          <div className="w-full h-24 bg-white/50 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
-          <div className="h-64 bg-white/50 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="h-40 bg-white/50 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
-            <div className="h-40 bg-white/50 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
-          </div>
-        </div>
-      ) : isError ? (
-        <div className="pastel-card p-4 text-center text-red-400 mb-6">
-          Error loading mood entries.
-        </div>
-      ) : (
-        <div className="animate-fade-in">
-          {/* Mood History Strip */}
-          <MoodHistoryStrip
-            entries={entries || []}
-            onEntryClick={(entry) => setSelectedEntry(entry)}
-          />
-
-          {/* Today's Entry OR first-time log form */}
-          {!showLogForm && (
-            todayEntry ? (
-              <div className="space-y-6 mb-6">
-                <div className={`pastel-card p-5 border-l-4 ${accentClasses.border} dark:border-purple-800 animate-fade-in`}>
-                  <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">Today&apos;s Entry</h2>
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-4xl">{getMoodEmoji(todayEntry.mood)}</span>
-                    <div>
-                      <p className="font-semibold text-gray-700 dark:text-gray-200">{getMoodLabel(todayEntry.mood)}</p>
-                      <p className="text-sm text-gray-400 dark:text-gray-500">😴 {todayEntry.sleep_hours} hours sleep</p>
-                    </div>
+            {todayEntry ? (
+              <div className="grid gap-4 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:items-start">
+                <div className={`flex items-center gap-3 rounded-2xl border-l-4 p-4 ${accentClasses.bg} ${accentClasses.border} dark:bg-purple-900/20`}>
+                  <span className="text-4xl">{getMoodEmoji(todayEntry.mood)}</span>
+                  <div>
+                    <p className="font-semibold text-gray-800 dark:text-gray-100">{getMoodLabel(todayEntry.mood)}</p>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">😴 {todayEntry.sleep_hours} hours of sleep</p>
                   </div>
-
                   {Array.isArray(todayEntry.feelings) && todayEntry.feelings.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {todayEntry.feelings.map((fId) => {
-                        const f = getFeelingLabel(fId);
-                        return (
-                          <span
-                            key={fId}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-pastel-mint dark:bg-emerald-900/20 text-green-700 dark:text-emerald-400 text-xs font-medium border border-pastel-mint-dark/30"
-                          >
-                            {f.emoji} {f.label}
-                          </span>
-                        );
+                    <div className="ml-auto flex max-w-[55%] flex-wrap justify-end gap-1.5">
+                      {todayEntry.feelings.map((feeling) => {
+                        const item = getFeelingLabel(feeling);
+                        return <span key={feeling} className="rounded-full border border-white/80 bg-white/60 px-2 py-1 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-300">{item.emoji} {item.label}</span>;
                       })}
                     </div>
                   )}
-
-                  {todayEntry.reflection && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 italic border-t border-gray-100 dark:border-gray-700/50 pt-2 mt-2">
-                      ✏️ &ldquo;{todayEntry.reflection}&rdquo;
-                    </p>
-                  )}
-
-                  {quoteForToday && (
-                    <div className={`mt-3 p-3 ${accentClasses.bg} dark:bg-purple-900/20 rounded-xl text-sm text-gray-600 dark:text-gray-400`}>
-                      💬 &ldquo;{quoteForToday.quote}&rdquo;
-                    </div>
-                  )}
                 </div>
-
-                <SelfCareSuggestions mood={todayEntry.mood} />
+                <div className="min-h-24 rounded-2xl bg-white/50 p-4 dark:bg-gray-800/40">
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Your note</p>
+                  <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{todayEntry.reflection ? `“${todayEntry.reflection}”` : 'No note added to today’s entry.'}</p>
+                </div>
               </div>
             ) : (
-              <MoodLogForm />
-            )
-          )}
+              <div className="flex flex-col items-start justify-between gap-3 rounded-2xl bg-purple-50/70 p-4 dark:bg-purple-900/15 sm:flex-row sm:items-center">
+                <div><p className="font-medium text-gray-700 dark:text-gray-200">No mood logged today yet</p><p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Take a minute to record how you&apos;re feeling.</p></div>
+                <button onClick={() => setShowLogForm(true)} className="shrink-0 rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700">Start check-in</button>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
 
-          {/* Calendar */}
-          <div className="mb-6">
-            <MoodCalendar entries={entries || []} />
-          </div>
+      {section === 'calendar' && <MoodCalendar entries={entryList} />}
 
-          {/* Search */}
-          <ReflectionSearch onEntryClick={(entry) => setSelectedEntry(entry)} />
+      {section === 'insights' && (
+        <div className="grid auto-rows-min gap-4 xl:grid-cols-2">
+          <WeeklySummary entries={entryList} />
+          <BadgesList entries={entryList} />
+          <AveragesComparison entries={entryList} />
+          <MoodDistribution entries={entryList} />
+        </div>
+      )}
 
-          {/* Stats and Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <WeeklySummary entries={entries || []} />
-            <BadgesList entries={entries || []} />
-            <AveragesComparison entries={entries || []} />
-            <div className="md:col-span-1">
-              <MoodDistribution entries={entries || []} />
+      {section === 'trends' && <MoodTrends entries={entryList} />}
+
+      <div className="mt-6 border-t border-gray-200/70 pt-4 text-xs text-gray-400 dark:border-gray-700/60 dark:text-gray-500">
+        Need a full record of your check-ins? <Link to="/history" className="font-medium text-purple-600 hover:underline dark:text-purple-300">Open mood history</Link>
+      </div>
+
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm" onClick={() => setShowConfirm(false)}>
+          <div className="pastel-card w-full max-w-sm p-6" onClick={(event) => event.stopPropagation()}>
+            <div className="text-center">
+              <span className="text-4xl">🔄</span>
+              <h2 className="mt-2 text-lg font-semibold text-gray-800 dark:text-gray-100">Update today&apos;s entry?</h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Your new check-in will replace today&apos;s mood and note.</p>
             </div>
-            <div className="md:col-span-2">
-              <MoodTrends entries={entries || []} />
+            <div className="mt-5 flex gap-3">
+              <button onClick={() => setShowConfirm(false)} className="flex-1 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Cancel</button>
+              <button onClick={() => { setShowConfirm(false); setShowLogForm(true); }} className="flex-1 rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700">Update mood</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Detail Modal for Strip/Calendar */}
-      {selectedEntry && (
-        <MoodDetailModal entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
-      )}
+      {selectedEntry && <MoodDetailModal entry={selectedEntry} onClose={() => setSelectedEntry(null)} />}
     </div>
   );
 };
